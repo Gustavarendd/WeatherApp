@@ -14,31 +14,94 @@ namespace WeatherApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(double latitude = 50, double longitude = 11)
+        public async Task<IActionResult> Index(
+            double latitude = 55.6761,
+            double longitude = 12.5683,
+            int forecastDays = 5,
+            string units = "metric",
+            string sortBy = "",
+            string weatherType = "",
+            bool latestSunset = false)
         {
             // Create client with the application's base URL
             var client = _httpClientFactory.CreateClient();
-            // Use absolute URL including the host
-            var response = await client.GetAsync($"{Request.Scheme}://{Request.Host}/api/WeatherApi/current?latitude={latitude}&longitude={longitude}");
-            Console.WriteLine(Request.Scheme, Request.Host);
-            if (response.IsSuccessStatusCode)
+
+            var model = new IndexModel
             {
-                var apiResponse = await response.Content.ReadAsStringAsync();
-                var weather = JsonSerializer.Deserialize<WeatherResponse>(apiResponse);
-                var model = new IndexModel
-                {
-                    Latitude = latitude,
-                    Longitude = longitude,
-                    Weather = weather,
-                };
-                ViewData["Title"] = "Home Page";
-                return View(model);
+                Latitude = latitude,
+                Longitude = longitude,
+                ForecastDays = forecastDays,
+                Units = units,
+                SortBy = sortBy,
+                WeatherType = weatherType,
+                LatestSunset = latestSunset
+            };
+
+            // Get current weather
+            var weatherResponse = await client.GetAsync(
+                $"{Request.Scheme}://{Request.Host}/api/WeatherApi/current?latitude={latitude}&longitude={longitude}&units={units}");
+
+            if (weatherResponse.IsSuccessStatusCode)
+            {
+                var weatherApiResponse = await weatherResponse.Content.ReadAsStringAsync();
+                model.Weather = JsonSerializer.Deserialize<WeatherResponse>(weatherApiResponse);
             }
-            return View(new IndexModel { ApiResponse = "Error fetching data" });
+
+            // Build forecast URL with all parameters
+            string forecastUrl = $"{Request.Scheme}://{Request.Host}/api/WeatherApi/forecast" +
+                $"?latitude={latitude}&longitude={longitude}&days={forecastDays}&units={units}";
+
+            if (!string.IsNullOrEmpty(sortBy))
+            {
+                forecastUrl += $"&sortBy={sortBy}";
+            }
+
+            if (!string.IsNullOrEmpty(weatherType))
+            {
+                forecastUrl += $"&weatherType={weatherType}";
+            }
+
+            if (latestSunset)
+            {
+                forecastUrl += "&latestSunset=true";
+            }
+
+            // Get forecast
+            var forecastResponse = await client.GetAsync(forecastUrl);
+
+            if (forecastResponse.IsSuccessStatusCode)
+            {
+                var forecastApiResponse = await forecastResponse.Content.ReadAsStringAsync();
+
+                if (latestSunset)
+                {
+                    // For latestSunset, the response format is different
+                    var combinedResponse = JsonSerializer.Deserialize<JsonElement>(forecastApiResponse);
+                    if (combinedResponse.TryGetProperty("allForecasts", out var allForecasts) &&
+                        combinedResponse.TryGetProperty("latestSunsetDay", out var latestSunsetDay))
+                    {
+                        model.Forecast = JsonSerializer.Deserialize<ForecastResponse>(allForecasts.GetRawText());
+                        model.LatestSunsetDay = JsonSerializer.Deserialize<DailyForecastItem>(latestSunsetDay.GetRawText());
+                    }
+                }
+                else
+                {
+                    model.Forecast = JsonSerializer.Deserialize<ForecastResponse>(forecastApiResponse);
+                }
+            }
+
+            ViewData["Title"] = "Home Page";
+            return View(model);
         }
 
         [HttpGet]
-        public async Task<IActionResult> ByCity(string city)
+        public async Task<IActionResult> ByCity(
+            string city,
+            int forecastDays = 5,
+            string units = "metric",
+            string sortBy = "",
+            string weatherType = "",
+            bool latestSunset = false)
         {
             if (string.IsNullOrEmpty(city))
             {
@@ -46,20 +109,33 @@ namespace WeatherApp.Controllers
             }
 
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"{Request.Scheme}://{Request.Host}/api/WeatherApi/by-city?city={city}");
 
-            if (response.IsSuccessStatusCode)
+            // Get weather by city to get coordinates
+            var cityResponse = await client.GetAsync($"{Request.Scheme}://{Request.Host}/api/WeatherApi/by-city?city={city}&units={units}");
+
+            if (cityResponse.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadAsStringAsync();
-                var weather = JsonSerializer.Deserialize<WeatherResponse>(apiResponse);
-                var model = new IndexModel
+                var cityApiResponse = await cityResponse.Content.ReadAsStringAsync();
+                var weather = JsonSerializer.Deserialize<WeatherResponse>(cityApiResponse);
+
+                if (weather != null)
                 {
-                    Weather = weather,
-                };
-                ViewData["Title"] = "Home Page";
-                return View("Index", model);
+                    // Redirect to the Index action with the coordinates
+                    return RedirectToAction("Index", new
+                    {
+                        latitude = weather.Coord.Lat,
+                        longitude = weather.Coord.Lon,
+                        forecastDays,
+                        units,
+                        sortBy,
+                        weatherType,
+                        latestSunset
+                    });
+                }
             }
-            return View("Index", new IndexModel { ApiResponse = $"Error fetching weather data for {city}" });
+
+            // If city not found, redirect to Index
+            return RedirectToAction("Index");
         }
     }
 }

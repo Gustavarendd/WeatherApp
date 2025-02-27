@@ -9,6 +9,9 @@ builder.Services.AddHttpClient();
 // Register named HttpClient for the API controller
 builder.Services.AddHttpClient("OpenWeatherClient");
 
+// Add memory cache for storing weather data
+builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

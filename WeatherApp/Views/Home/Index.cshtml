@@ -20,25 +20,109 @@
         <div class="tab-content p-3 border border-top-0 rounded-bottom">
             <div class="tab-pane fade show active" id="coordinates" role="tabpanel">
                 <form method="get" asp-action="Index">
-                    <div class="w-100 d-flex gap-3 mb-3">
-                        <div class="form-group w-50">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
                             <label for="latitude">Latitude:</label>
-                            <input type="text" id="latitude" name="Latitude" class="form-control" value="@Model.Latitude" />
+                            <input type="text" id="latitude" name="latitude" class="form-control" value="@Model.Latitude" />
                         </div>
-                        <div class="form-group w-50">
+                        <div class="col-md-6">
                             <label for="longitude">Longitude:</label>
-                            <input type="text" id="longitude" name="Longitude" class="form-control" value="@Model.Longitude" />
+                            <input type="text" id="longitude" name="longitude" class="form-control" value="@Model.Longitude" />
                         </div>
                     </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="forecastDays">Forecast Days (1-7):</label>
+                            <input type="number" id="forecastDays" name="forecastDays" class="form-control" min="1" max="7" value="@Model.ForecastDays" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="units">Units:</label>
+                            <select id="units" name="units" class="form-select">
+                                <option value="metric" @(Model.Units == "metric" ? "selected" : "")>Metric (°C, m/s)</option>
+                                <option value="imperial" @(Model.Units == "imperial" ? "selected" : "")>Imperial (°F, mph)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sortBy">Sort By:</label>
+                            <select id="sortBy" name="sortBy" class="form-select">
+                                <option value="" @(string.IsNullOrEmpty(Model.SortBy) ? "selected" : "")>Default</option>
+                                <option value="precipitation" @(Model.SortBy == "precipitation" ? "selected" : "")>Precipitation (High to Low)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="weatherType">Filter by Weather Type:</label>
+                            <select id="weatherType" name="weatherType" class="form-select">
+                                <option value="" @(string.IsNullOrEmpty(Model.WeatherType) ? "selected" : "")>All Weather Types</option>
+                                @foreach (var type in Model.WeatherTypes)
+                                {
+                                    <option value="@type" @(Model.WeatherType == type ? "selected" : "")>@type</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="latestSunset" name="latestSunset" value="true" @(Model.LatestSunset ? "checked" : "") />
+                                <label class="form-check-label" for="latestSunset">Find day with latest sunset</label>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-primary">Fetch Weather Data</button>
                 </form>
             </div>
             <div class="tab-pane fade" id="city" role="tabpanel">
                 <form method="get" asp-action="ByCity">
-                    <div class="form-group mb-3">
-                        <label for="city">City Name:</label>
-                        <input type="text" id="city" name="city" class="form-control" />
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="city">City Name:</label>
+                            <input type="text" id="city" name="city" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cityUnits">Units:</label>
+                            <select id="cityUnits" name="units" class="form-select">
+                                <option value="metric">Metric (°C, m/s)</option>
+                                <option value="imperial">Imperial (°F, mph)</option>
+                            </select>
+                        </div>
                     </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="cityForecastDays">Forecast Days (1-7):</label>
+                            <input type="number" id="cityForecastDays" name="forecastDays" class="form-control" min="1" max="7" value="5" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="citySortBy">Sort By:</label>
+                            <select id="citySortBy" name="sortBy" class="form-select">
+                                <option value="">Default</option>
+                                <option value="precipitation">Precipitation (High to Low)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cityWeatherType">Filter by Weather Type:</label>
+                            <select id="cityWeatherType" name="weatherType" class="form-select">
+                                <option value="">All Weather Types</option>
+                                @foreach (var type in Model.WeatherTypes)
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="cityLatestSunset" name="latestSunset" value="true" />
+                                <label class="form-check-label" for="cityLatestSunset">Find day with latest sunset</label>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-primary">Fetch Weather Data</button>
                 </form>
             </div>
@@ -63,11 +147,20 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="humidity-tab" data-bs-toggle="tab" data-bs-target="#humidity" type="button" role="tab">Humidity</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="forecast-tab" data-bs-toggle="tab" data-bs-target="#forecast" type="button" role="tab">Forecast</button>
+                    </li>
+                    @if (Model.LatestSunset)
+                    {
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="sunset-tab" data-bs-toggle="tab" data-bs-target="#sunset" type="button" role="tab">Latest Sunset</button>
+                        </li>
+                    }
                 </ul>
             </div>
             
             <div class="card-body">
-                <h5 class="card-title">@Model.Weather.Name Weather</h5>
+                <h5 class="card-title">@Model.Weather.Name Weather (@Model.GetTemperatureUnit())</h5>
                 
                 <div class="tab-content" id="weatherDataTabContent">
                     <!-- Overview Tab -->
@@ -84,13 +177,13 @@
                             <div class="col-md-6">
                                 <ul class="list-group">
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>Temperature:</span> <strong>@Model.Weather.Main.Temp°C</strong>
+                                        <span>Temperature:</span> <strong>@Model.Weather.Main.Temp@Model.GetTemperatureUnit()</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>Humidity:</span> <strong>@Model.Weather.Main.Humidity%</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>Wind Speed:</span> <strong>@Model.Weather.Wind.Speed m/s</strong>
+                                        <span>Wind Speed:</span> <strong>@Model.Weather.Wind.Speed @Model.GetSpeedUnit()</strong>
                                     </li>
                                 </ul>
                             </div>
@@ -103,16 +196,16 @@
                             <div class="col-md-12">
                                 <ul class="list-group">
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>Current Temperature:</span> <strong>@Model.Weather.Main.Temp°C</strong>
+                                        <span>Current Temperature:</span> <strong>@Model.Weather.Main.Temp@Model.GetTemperatureUnit()</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>Feels Like:</span> <strong>@Model.Weather.Main.FeelsLike°C</strong>
+                                        <span>Feels Like:</span> <strong>@Model.Weather.Main.FeelsLike@Model.GetTemperatureUnit()</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>Minimum Temperature:</span> <strong>@Model.Weather.Main.TempMin°C</strong>
+                                        <span>Minimum Temperature:</span> <strong>@Model.Weather.Main.TempMin@Model.GetTemperatureUnit()</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>Maximum Temperature:</span> <strong>@Model.Weather.Main.TempMax°C</strong>
+                                        <span>Maximum Temperature:</span> <strong>@Model.Weather.Main.TempMax@Model.GetTemperatureUnit()</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>Pressure:</span> <strong>@Model.Weather.Main.Pressure hPa</strong>
@@ -128,7 +221,7 @@
                             <div class="col-md-12">
                                 <ul class="list-group">
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>Wind Speed:</span> <strong>@Model.Weather.Wind.Speed m/s</strong>
+                                        <span>Wind Speed:</span> <strong>@Model.Weather.Wind.Speed @Model.GetSpeedUnit()</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>Wind Direction:</span> <strong>@Model.Weather.Wind.Deg°</strong>
@@ -156,6 +249,183 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Forecast Tab -->
+                    <div class="tab-pane fade" id="forecast" role="tabpanel">
+                        @if (!string.IsNullOrEmpty(Model.WeatherType))
+                        {
+                            <div class="alert alert-info mb-3">
+                                Filtered to show only: <strong>@Model.WeatherType</strong> weather conditions
+                            </div>
+                        }
+
+                        @if (Model.SortBy == "precipitation")
+                        {
+                            <div class="alert alert-info mb-3">
+                                Sorted by precipitation (high to low)
+                            </div>
+                        }
+
+                        <div class="row">
+                            @if (Model.Forecast?.List?.Any() == true)
+                            {
+                                @foreach (var item in Model.Forecast.List)
+                                {
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-header text-center">
+                                                <strong>@DateTime.UnixEpoch.AddSeconds(item.Dt).ToString("MMM dd, HH:mm")</strong>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (item.Weather.Count > 0)
+                                                {
+                                                    <div class="text-center mb-2">
+                                                        <img src="https://openweathermap.org/img/wn/@(item.Weather[0].Icon)@@2x.png" alt="Weather Icon" />
+                                                        <p class="fw-bold mb-0">@item.Weather[0].Main</p>
+                                                        <p>@item.Weather[0].Description</p>
+                                                    </div>
+                                                }
+                                                <ul class="list-group">
+                                                    <li class="list-group-item d-flex justify-content-between">
+                                                        <span>Temperature:</span> <strong>@item.Main.Temp@Model.GetTemperatureUnit()</strong>
+                                                    </li>
+                                                    <li class="list-group-item d-flex justify-content-between">
+                                                        <span>Feels like:</span> <strong>@item.Main.FeelsLike@Model.GetTemperatureUnit()</strong>
+                                                    </li>
+                                                    <li class="list-group-item d-flex justify-content-between">
+                                                        <span>Humidity:</span> <strong>@item.Main.Humidity%</strong>
+                                                    </li>
+                                                    @if (Model.SortBy == "precipitation")
+                                                    {
+                                                        <li class="list-group-item d-flex justify-content-between bg-light">
+                                                            <span>Precipitation:</span>
+                                                            <strong>
+                                                                @if (item.Rain != null)
+                                                                {
+                                                                    @(item.Rain.ThreeHours)
+                                                                }
+                                                                else if (item.Snow != null)
+                                                                {
+                                                                    @(item.Snow.ThreeHours)
+                                                                }
+                                                                else
+                                                                {
+                                                                    @(0)
+                                                                } mm
+                                                            </strong>
+                                                        </li>
+                                                    }
+                                                    <li class="list-group-item d-flex justify-content-between">
+                                                        <span>Wind:</span> <strong>@item.Wind.Speed @Model.GetSpeedUnit()</strong>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        No forecast data available or no data matches the selected filters.
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Latest Sunset Tab -->
+                    @if (Model.LatestSunset && Model.LatestSunsetDay != null)
+                    {
+                        <div class="tab-pane fade" id="sunset" role="tabpanel">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">Day with Latest Sunset</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 text-center">
+                                            <h4>@Model.LatestSunsetDay.Date.ToString("dddd, MMMM d, yyyy")</h4>
+                                            @if (Model.LatestSunsetDay.Weather.Count > 0)
+                                            {
+                                                <img src="https://openweathermap.org/img/wn/@(Model.LatestSunsetDay.Weather[0].Icon)@@2x.png" alt="Weather Icon" class="img-fluid" style="width: 150px;" />
+                                                <p class="h4">@Model.LatestSunsetDay.Weather[0].Main</p>
+                                                <p>@Model.LatestSunsetDay.Weather[0].Description</p>
+                                            }
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-info text-white">
+                                                    <i class="fas fa-sun"></i> Sun Information
+                                                </div>
+                                                <div class="card-body">
+                                                    <ul class="list-group">
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Sunset Time:</span>
+                                                            <strong>@Model.LatestSunsetDay.SunsetTime.ToLocalTime().ToString("HH:mm")</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Sunrise Time:</span>
+                                                            <strong>@Model.LatestSunsetDay.SunriseTime.ToLocalTime().ToString("HH:mm")</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Daylight Hours:</span>
+                                                            <strong>
+                                                                @{
+                                                                    var daylightHours = (Model.LatestSunsetDay.SunsetTime - Model.LatestSunsetDay.SunriseTime).TotalHours;
+                                                                    @daylightHours.ToString("F1") <text> hours</text>
+                                                                }
+                                                            </strong>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <div class="card">
+                                                <div class="card-header bg-primary text-white">
+                                                    <i class="fas fa-thermometer-half"></i> Weather Details
+                                                </div>
+                                                <div class="card-body">
+                                                    <ul class="list-group">
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Max Temperature:</span>
+                                                            <strong>@Model.LatestSunsetDay.Temp.Max@Model.GetTemperatureUnit()</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Min Temperature:</span>
+                                                            <strong>@Model.LatestSunsetDay.Temp.Min@Model.GetTemperatureUnit()</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Day Temperature:</span>
+                                                            <strong>@Model.LatestSunsetDay.Temp.Day@Model.GetTemperatureUnit()</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Night Temperature:</span>
+                                                            <strong>@Model.LatestSunsetDay.Temp.Night@Model.GetTemperatureUnit()</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Humidity:</span>
+                                                            <strong>@Model.LatestSunsetDay.Humidity%</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Wind Speed:</span>
+                                                            <strong>@Model.LatestSunsetDay.WindSpeed @Model.GetSpeedUnit()</strong>
+                                                        </li>
+                                                        <li class="list-group-item d-flex justify-content-between">
+                                                            <span>Probability of Precipitation:</span>
+                                                            <strong>@(Model.LatestSunsetDay.Pop * 100)%</strong>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                 </div>
             </div>
         </div>
