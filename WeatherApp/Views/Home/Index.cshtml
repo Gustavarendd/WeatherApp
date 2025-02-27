@@ -1,0 +1,179 @@
+﻿@model WeatherApp.Models.IndexModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Weather Data</h1>
+    
+    <!-- Inputs for coordinates or city -->
+    <div class="mb-4">
+        <ul class="nav nav-tabs" id="weatherTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="coordinates-tab" data-bs-toggle="tab" data-bs-target="#coordinates" type="button" role="tab">By Coordinates</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="city-tab" data-bs-toggle="tab" data-bs-target="#city" type="button" role="tab">By City</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content p-3 border border-top-0 rounded-bottom">
+            <div class="tab-pane fade show active" id="coordinates" role="tabpanel">
+                <form method="get" asp-action="Index">
+                    <div class="w-100 d-flex gap-3 mb-3">
+                        <div class="form-group w-50">
+                            <label for="latitude">Latitude:</label>
+                            <input type="text" id="latitude" name="Latitude" class="form-control" value="@Model.Latitude" />
+                        </div>
+                        <div class="form-group w-50">
+                            <label for="longitude">Longitude:</label>
+                            <input type="text" id="longitude" name="Longitude" class="form-control" value="@Model.Longitude" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Fetch Weather Data</button>
+                </form>
+            </div>
+            <div class="tab-pane fade" id="city" role="tabpanel">
+                <form method="get" asp-action="ByCity">
+                    <div class="form-group mb-3">
+                        <label for="city">City Name:</label>
+                        <input type="text" id="city" name="city" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Fetch Weather Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Weather data tabs -->
+    @if (Model.Weather != null && !string.IsNullOrEmpty(Model.Weather.Name))
+    {
+        <div class="card mt-4">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="weatherDataTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">Overview</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="temperature-tab" data-bs-toggle="tab" data-bs-target="#temperature" type="button" role="tab">Temperature</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="wind-tab" data-bs-toggle="tab" data-bs-target="#wind" type="button" role="tab">Wind</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="humidity-tab" data-bs-toggle="tab" data-bs-target="#humidity" type="button" role="tab">Humidity</button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card-body">
+                <h5 class="card-title">@Model.Weather.Name Weather</h5>
+                
+                <div class="tab-content" id="weatherDataTabContent">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6 text-center">
+                                @if (Model.Weather.WeatherInfo.Count > 0)
+                                {
+                                    <img src="https://openweathermap.org/img/wn/@(Model.Weather.WeatherInfo[0].Icon)@@2x.png" alt="Weather Icon" />
+                                    <p class="h4">@Model.Weather.WeatherInfo[0].Main</p>
+                                    <p>@Model.Weather.WeatherInfo[0].Description</p>
+                                }
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Temperature:</span> <strong>@Model.Weather.Main.Temp°C</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Humidity:</span> <strong>@Model.Weather.Main.Humidity%</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Wind Speed:</span> <strong>@Model.Weather.Wind.Speed m/s</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Temperature Tab -->
+                    <div class="tab-pane fade" id="temperature" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Current Temperature:</span> <strong>@Model.Weather.Main.Temp°C</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Feels Like:</span> <strong>@Model.Weather.Main.FeelsLike°C</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Minimum Temperature:</span> <strong>@Model.Weather.Main.TempMin°C</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Maximum Temperature:</span> <strong>@Model.Weather.Main.TempMax°C</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Pressure:</span> <strong>@Model.Weather.Main.Pressure hPa</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Wind Tab -->
+                    <div class="tab-pane fade" id="wind" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Wind Speed:</span> <strong>@Model.Weather.Wind.Speed m/s</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Wind Direction:</span> <strong>@Model.Weather.Wind.Deg°</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Humidity Tab -->
+                    <div class="tab-pane fade" id="humidity" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Humidity:</span> <strong>@Model.Weather.Main.Humidity%</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Clouds:</span> <strong>@Model.Weather.Clouds.All%</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Visibility:</span> <strong>@(Model.Weather.Visibility / 1000) km</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize Bootstrap tabs
+        document.addEventListener('DOMContentLoaded', function () {
+            var triggerTabList = [].slice.call(document.querySelectorAll('#weatherTabs button, #weatherDataTabs button'))
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl)
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault()
+                    tabTrigger.show()
+                })
+            })
+        });
+    </script>
+}
