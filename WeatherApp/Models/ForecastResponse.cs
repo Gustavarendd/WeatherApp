@@ -49,7 +49,13 @@ namespace WeatherApp.Models
     public class Rain
     {
         [JsonPropertyName("3h")]
-        public double ThreeHours { get; set; }
+        public double? ThreeHours { get; set; }
+    }
+
+    public class Snow
+    {
+        [JsonPropertyName("3h")]
+        public double? ThreeHours { get; set; }
     }
 
     public class City

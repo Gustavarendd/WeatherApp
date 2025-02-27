@@ -110,11 +110,7 @@ namespace WeatherApp.Models
         public double? Gust { get; set; } = 0;
     }
 
-    public class Snow
-    {
-        [JsonPropertyName("1h")]
-        public double? OneHour { get; set; } = 0;
-    }
+   
 
     public class Clouds
     {

@@ -37,32 +37,33 @@
                             <input type="number" id="forecastDays" name="forecastDays" class="form-control" min="1" max="7" value="@Model.ForecastDays" />
                         </div>
                         <div class="col-md-4">
-                            <label for="units">Units:</label>
-                            <select id="units" name="units" class="form-select">
-                                <option value="metric" @(Model.Units == "metric" ? "selected" : "")>Metric (°C, m/s)</option>
-                                <option value="imperial" @(Model.Units == "imperial" ? "selected" : "")>Imperial (°F, mph)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="sortBy">Sort By:</label>
-                            <select id="sortBy" name="sortBy" class="form-select">
-                                <option value="" @(string.IsNullOrEmpty(Model.SortBy) ? "selected" : "")>Default</option>
-                                <option value="precipitation" @(Model.SortBy == "precipitation" ? "selected" : "")>Precipitation (High to Low)</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="weatherType">Filter by Weather Type:</label>
-                            <select id="weatherType" name="weatherType" class="form-select">
-                                <option value="" @(string.IsNullOrEmpty(Model.WeatherType) ? "selected" : "")>All Weather Types</option>
-                                @foreach (var type in Model.WeatherTypes)
-                                {
-                                    <option value="@type" @(Model.WeatherType == type ? "selected" : "")>@type</option>
-                                }
-                            </select>
-                        </div>
+    <label for="units">Units:</label>
+    <select id="units" name="Units" class="form-select">
+        <option value="metric" selected=@(Model.Units == "metric" ? "selected" : "")>Metric (°C, m/s)</option>
+                                <option value="imperial" selected=@(Model.Units == "imperial" ? "selected" : "")>Imperial (°F, mph)</option>
+    </select>
+</div>
+<div class="col-md-4">
+    <label for="sortBy">Sort By:</label>
+    <select id="sortBy" name="SortBy" class="form-select">
+                                <option value="" selected=@(string.IsNullOrEmpty(Model.SortBy) ? "selected" : "")>Default</option>
+                                <option value="precipitation" selected=@(Model.SortBy == "precipitation" ? "selected" : "")>Precipitation (High to Low)</option>
+    </select>
+</div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label for="weatherType">Filter by Weather Type:</label>
+        <select id="weatherType" name="WeatherType" class="form-select">
+                                <option value="" selected=@(string.IsNullOrEmpty(Model.WeatherType) ? "selected" : "")>All Weather Types</option>
+            @foreach (var type in Model.WeatherTypes)
+            {
+                                    <option value="@type" selected=@(Model.WeatherType == type ? "selected" : "")>@type</option>
+            }
+        </select>
+    </div>
+
                         <div class="col-md-6">
                             <div class="form-check mt-4">
                                 <input class="form-check-input" type="checkbox" id="latestSunset" name="latestSunset" value="true" @(Model.LatestSunset ? "checked" : "") />
@@ -300,18 +301,18 @@
                                                         <li class="list-group-item d-flex justify-content-between bg-light">
                                                             <span>Precipitation:</span>
                                                             <strong>
-                                                                @if (item.Rain != null)
-                                                                {
-                                                                    @(item.Rain.ThreeHours)
+                                                                @{
+                                                                    double precipAmount = 0;
+                                                                    if (item.Rain != null && item.Rain.ThreeHours.HasValue)
+                                                                    {
+                                                                        precipAmount = item.Rain.ThreeHours.Value;
+                                                                    }
+                                                                    else if (item.Snow != null && item.Snow.ThreeHours.HasValue)
+                                                                    {
+                                                                        precipAmount = item.Snow.ThreeHours.Value;
+                                                                    }
                                                                 }
-                                                                else if (item.Snow != null)
-                                                                {
-                                                                    @(item.Snow.ThreeHours)
-                                                                }
-                                                                else
-                                                                {
-                                                                    @(0)
-                                                                } mm
+                                                                @precipAmount mm
                                                             </strong>
                                                         </li>
                                                     }
@@ -347,7 +348,7 @@
                                     <div class="row">
                                         <div class="col-md-6 text-center">
                                             <h4>@Model.LatestSunsetDay.Date.ToString("dddd, MMMM d, yyyy")</h4>
-                                            @if (Model.LatestSunsetDay.Weather.Count > 0)
+                                            @if (Model.LatestSunsetDay.Weather != null && Model.LatestSunsetDay.Weather.Count > 0)
                                             {
                                                 <img src="https://openweathermap.org/img/wn/@(Model.LatestSunsetDay.Weather[0].Icon)@@2x.png" alt="Weather Icon" class="img-fluid" style="width: 150px;" />
                                                 <p class="h4">@Model.LatestSunsetDay.Weather[0].Main</p>
@@ -357,7 +358,7 @@
                                         <div class="col-md-6">
                                             <div class="card mb-3">
                                                 <div class="card-header bg-info text-white">
-                                                    <i class="fas fa-sun"></i> Sun Information
+                                                    <span>Sun Information</span>
                                                 </div>
                                                 <div class="card-body">
                                                     <ul class="list-group">
@@ -384,7 +385,7 @@
 
                                             <div class="card">
                                                 <div class="card-header bg-primary text-white">
-                                                    <i class="fas fa-thermometer-half"></i> Weather Details
+                                                    <span>Weather Details</span>
                                                 </div>
                                                 <div class="card-body">
                                                     <ul class="list-group">
@@ -425,6 +426,7 @@
                             </div>
                         </div>
                     }
+
 
                 </div>
             </div>
