@@ -5,7 +5,7 @@
 
 <div class="text-center">
     <h1 class="display-4">Weather Data</h1>
-    
+        
     <!-- Inputs for coordinates or city -->
     <div class="mb-4">
         <ul class="nav nav-tabs" id="weatherTabs" role="tablist">
@@ -23,11 +23,20 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="latitude">Latitude:</label>
-                            <input type="text" id="latitude" name="latitude" class="form-control" value="@Model.Latitude" />
+                            <input type="text" id="latitude" name="latitude" class="form-control"
+                                   value="@Model.Latitude" pattern="-?\d+(\.\d+)?"
+                                   title="Please enter a valid latitude" required />
                         </div>
                         <div class="col-md-6">
                             <label for="longitude">Longitude:</label>
-                            <input type="text" id="longitude" name="longitude" class="form-control" value="@Model.Longitude" />
+                            <input type="text" id="longitude" name="longitude" class="form-control"
+                                   value="@Model.Longitude" pattern="-?\d+(\.\d+)?"
+                                   title="Please enter a valid longitude" required />
+                        </div>
+                        <div class="col-12 mt-2">
+                            <button type="button" id="detectLocation" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-geo-alt"></i> Use My Location
+                            </button>
                         </div>
                     </div>
                     
@@ -37,32 +46,35 @@
                             <input type="number" id="forecastDays" name="forecastDays" class="form-control" min="1" max="7" value="@Model.ForecastDays" />
                         </div>
                         <div class="col-md-4">
-    <label for="units">Units:</label>
-    <select id="units" name="Units" class="form-select">
-        <option value="metric" selected=@(Model.Units == "metric" ? "selected" : "")>Metric (°C, m/s)</option>
-                                <option value="imperial" selected=@(Model.Units == "imperial" ? "selected" : "")>Imperial (°F, mph)</option>
-    </select>
-</div>
-<div class="col-md-4">
-    <label for="sortBy">Sort By:</label>
-    <select id="sortBy" name="SortBy" class="form-select">
-                                <option value="" selected=@(string.IsNullOrEmpty(Model.SortBy) ? "selected" : "")>Default</option>
-                                <option value="precipitation" selected=@(Model.SortBy == "precipitation" ? "selected" : "")>Precipitation (High to Low)</option>
-    </select>
-</div>
-</div>
+                            <label for="units">Units:</label>
+                             
+                                <select id="units" name="units" class="form-select">
+                                    <option value="metric">Metric (°C, m/s)</option>
+                                    <option value="imperial">Imperial (°F, mph)</option>
+                                </select>
+                            
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sortBy">Sort By:</label>
+                            <select id="sortBy" name="SortBy" class="form-select">
+                                <option value="">Default</option>
+                                <option value="precipitation" >Precipitation (High to Low)</option>
+                                <option value="temperature" >Temperature (High to Low)</option>
+                            </select>
+                        </div>
+                    </div>
 
-<div class="row mb-3">
-    <div class="col-md-6">
-        <label for="weatherType">Filter by Weather Type:</label>
-        <select id="weatherType" name="WeatherType" class="form-select">
-                                <option value="" selected=@(string.IsNullOrEmpty(Model.WeatherType) ? "selected" : "")>All Weather Types</option>
-            @foreach (var type in Model.WeatherTypes)
-            {
-                                    <option value="@type" selected=@(Model.WeatherType == type ? "selected" : "")>@type</option>
-            }
-        </select>
-    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="weatherType">Filter by Weather Type:</label>
+                            <select id="weatherType" name="WeatherType" class="form-select">
+                                                    <option value="" >All Weather Types</option>
+                                @foreach (var type in Model.WeatherTypes)
+                                {
+                                                        <option value="@type" >@type</option>
+                                }
+                            </select>
+                        </div>
 
                         <div class="col-md-6">
                             <div class="form-check mt-4">
@@ -73,6 +85,12 @@
                     </div>
                     
                     <button type="submit" class="btn btn-primary">Fetch Weather Data</button>
+                    <div class="loading-spinner d-none mt-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">Fetching weather data...</span>
+                    </div>
                 </form>
             </div>
             <div class="tab-pane fade" id="city" role="tabpanel">
@@ -215,11 +233,11 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Wind Tab -->
                     <div class="tab-pane fade" id="wind" role="tabpanel">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <ul class="list-group">
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>Wind Speed:</span> <strong>@Model.Weather.Wind.Speed @Model.GetSpeedUnit()</strong>
@@ -228,6 +246,10 @@
                                         <span>Wind Direction:</span> <strong>@Model.Weather.Wind.Deg°</strong>
                                     </li>
                                 </ul>
+                            </div>
+                            <div class="col-md-6 text-center">
+                                <i class="bi bi-arrow-up" style="transform: rotate(@(Model.Weather.Wind.Deg)deg); font-size: 2rem;"></i>
+                                <p class="mt-2">Wind Direction</p>
                             </div>
                         </div>
                     </div>
@@ -272,7 +294,7 @@
                             {
                                 @foreach (var item in Model.Forecast.List)
                                 {
-                                    <div class="col-md-3 mb-3">
+                                    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
                                         <div class="card h-100">
                                             <div class="card-header text-center">
                                                 <strong>@DateTime.UnixEpoch.AddSeconds(item.Dt).ToString("MMM dd, HH:mm")</strong>
@@ -335,6 +357,8 @@
                             }
                         </div>
                     </div>
+
+                   
 
                     <!-- Latest Sunset Tab -->
                     @if (Model.LatestSunset && Model.LatestSunsetDay != null)
@@ -434,9 +458,10 @@
     }
 </div>
 
+
 @section Scripts {
     <script>
-        // Initialize Bootstrap tabs
+        
         document.addEventListener('DOMContentLoaded', function () {
             var triggerTabList = [].slice.call(document.querySelectorAll('#weatherTabs button, #weatherDataTabs button'))
             triggerTabList.forEach(function (triggerEl) {
@@ -446,6 +471,26 @@
                     tabTrigger.show()
                 })
             })
+        });
+        // Add geolocation feature
+        document.getElementById('detectLocation').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+
+        
+        // Show loading spinner
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                this.querySelector('.loading-spinner').classList.remove('d-none');
+                this.querySelector('button[type="submit"]').disabled = true;
+            });
         });
     </script>
 }
