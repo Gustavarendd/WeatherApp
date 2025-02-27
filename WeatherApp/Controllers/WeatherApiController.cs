@@ -12,12 +12,13 @@ namespace WeatherApp.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMemoryCache _cache;
-        private readonly string _apiKey = "d2d457c1bbbdb21f2061710aeb7f5cdc";
+        private readonly string _apiKey;
 
-        public WeatherApiController(IHttpClientFactory httpClientFactory, IMemoryCache cache)
+        public WeatherApiController(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
             _cache = cache;
+            _apiKey = configuration["OpenWeather:ApiKey"];
         }
 
         [HttpGet("current")]
