@@ -12,6 +12,11 @@ builder.Services.AddHttpClient("OpenWeatherClient");
 // Add memory cache for storing weather data
 builder.Services.AddMemoryCache();
 
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

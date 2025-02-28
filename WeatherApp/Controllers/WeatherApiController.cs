@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WeatherApp.Models;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace WeatherApp.Controllers
 {
@@ -13,12 +14,14 @@ namespace WeatherApp.Controllers
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMemoryCache _cache;
         private readonly string _apiKey;
+            private readonly ILogger<WeatherApiController> _logger;
 
-        public WeatherApiController(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration)
+        public WeatherApiController(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration, ILogger<WeatherApiController> logger)
         {
             _httpClientFactory = httpClientFactory;
             _cache = cache;
             _apiKey = configuration["OpenWeather:ApiKey"];
+            _logger = logger;
         }
 
         [HttpGet("current")]
@@ -28,6 +31,8 @@ namespace WeatherApp.Controllers
 
             if (!_cache.TryGetValue(cacheKey, out WeatherResponse weather))
             {
+                _logger.LogInformation("Cache miss for key: {CacheKey}", cacheKey);
+           
                 var client = _httpClientFactory.CreateClient("OpenWeatherClient");
                 var response = await client.GetAsync($"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_apiKey}&units={units}");
 
@@ -43,6 +48,10 @@ namespace WeatherApp.Controllers
                 {
                     return BadRequest("Error fetching data");
                 }
+            }
+            else
+            {
+                _logger.LogInformation("Cache hit for key: {CacheKey}", cacheKey);
             }
 
             return Ok(weather);
@@ -169,6 +178,7 @@ namespace WeatherApp.Controllers
 
             if (!_cache.TryGetValue(cacheKey, out ForecastResponse forecast))
             {
+                _logger.LogInformation("Cache miss for key: {CacheKey}", cacheKey);
                 var client = _httpClientFactory.CreateClient("OpenWeatherClient");
                 var response = await client.GetAsync($"https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&appid={_apiKey}&units={units}&cnt={days * 8}");
 
@@ -210,6 +220,9 @@ namespace WeatherApp.Controllers
                 {
                     return BadRequest("Error fetching forecast data");
                 }
+            } else
+            {
+                _logger.LogInformation("Cache hit for key: {CacheKey}", cacheKey);
             }
 
             // Apply filtering for specific weather type if requested
